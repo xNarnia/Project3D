@@ -1,0 +1,4 @@
+displayName = Tiles 3D
+author = Narnia
+version = 0.1
+dllReferences = AssimpNet
