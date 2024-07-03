@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria.ModLoader;
+using Terraria3DKit.Shapes;
+using Tiles3D.Tiles;
 
 namespace Tiles3D
 {
@@ -17,6 +19,15 @@ namespace Tiles3D
 			base.Load();
 		}
 
+		public override void PostSetupContent()
+		{
+			base.PostSetupContent();
+
+			// This pylon will be rendered at an inconsistent FPS using SpecialDraw 
+			// (slows down when zoomed in)
+			var cthulu = new ShapeModel();
+			CthuluTile3D.CthuluModel = cthulu;
+		}
 
 	}
 }

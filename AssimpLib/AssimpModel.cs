@@ -16,19 +16,18 @@ namespace Tiles3D.AssimpLib
 	// Credits to Dradonhunter for this skeleton
 	public class AssimpModel
 	{
-		private List<Texture2D> textureList;
-		private List<Texture2D> materialList;
-		private List<VertexBuffer> vertexBuffers;
-		private List<IndexBuffer> indexBuffers;
-		private List<int> vertexCount;
-		private List<int> faceCount;
+		public List<Texture2D> textureList;
+		public List<Texture2D> materialList;
+		public List<VertexBuffer> vertexBuffers;
+		public List<IndexBuffer> indexBuffers;
+		public List<int> vertexCount;
+		public List<int> faceCount;
 
-		private BasicEffect effect;
+		public BasicEffect effect;
 
-		private Matrix viewMatrix;
-		private Matrix projectionMatrix;
+		public Matrix viewMatrix;
+		public Matrix projectionMatrix;
 
-		private RenderTarget2D renderTarget;
 
 		public AssimpModel(string fileName, PostProcessSteps steps)
 		{
@@ -37,25 +36,6 @@ namespace Tiles3D.AssimpLib
 			LoadTexture(scene);
 			LoadVertexBuffers(scene);
 			LoadMaterials(scene);
-
-			projectionMatrix = Matrix.CreateOrthographic(Main.graphics.GraphicsDevice.Viewport.Width, Main.graphics.GraphicsDevice.Viewport.Height, 0.001f, 100f);
-			viewMatrix = Matrix.CreateLookAt(new Vector3(3.0f, 0.0f, 10.0f), Vector3.Zero, new Vector3(0.0f, 1.0f, 0.0f));
-
-			Main.QueueMainThreadAction(() =>
-			{
-				renderTarget = new RenderTarget2D(Main.instance.GraphicsDevice, Main.graphics.GraphicsDevice.Viewport.Width, Main.graphics.GraphicsDevice.Viewport.Height, true, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
-
-				//effect = shadetest3d.Instance.Assets.Request<Effect>("Assets/3DModel4", AssetRequestMode.ImmediateLoad).Value;
-
-				effect = new BasicEffect(Main.graphics.GraphicsDevice);
-
-
-
-				//effect.Parameters["WorldMatrix"].SetValue(Main.GameViewMatrix.TransformationMatrix); 
-				//effect.Parameters["ViewMatrix"].SetValue(viewMatrix);
-				//effect.Parameters["ProjectionMatrix"].SetValue(projectionMatrix);
-
-			});
 		}
 
 		private void LoadTexture(Scene scene)
@@ -122,7 +102,6 @@ namespace Tiles3D.AssimpLib
 						typeof(VertexPositionColorTexture), scene.Meshes[i].VertexCount, BufferUsage.None);
 
 					List<VertexPositionColorTexture> color = new List<VertexPositionColorTexture>();
-					//for (int j = scene.Meshes[i].Vertices.Count - 1; j >= 0; j--)
 					for (int j = 0; j < scene.Meshes[i].Vertices.Count; j++)
 					{
 						var vert = new VertexPositionColorTexture();
@@ -164,114 +143,6 @@ namespace Tiles3D.AssimpLib
 					faceCount.Add(scene.Meshes[i].GetShortIndices().Length);
 				}
 			});
-		}
-
-		private bool save;
-
-		private int saveTimer = 1;
-
-		private float angle = 0.0f;
-		private float deltaTime = 0.0f;
-		private float lastTime;
-
-		public void Update(GameTime gameTime)
-		{
-			float now = (float)gameTime.TotalGameTime.TotalMilliseconds;
-			deltaTime = now - lastTime;
-			lastTime = now;
-
-			angle += 0.1f * deltaTime;
-			if (angle > 360.0f)
-			{
-				angle -= 360.0f;
-			}
-		}
-
-		public void Draw()
-		{
-			GraphicsDevice device = Main.instance.GraphicsDevice;
-
-			var oldBuffer = device.Indices;
-			var oldGraphicsBinding = device.GetRenderTargets();
-			var oldVertexBinding = device.GetVertexBuffers();
-
-			var world = Matrix.CreateTranslation(new Vector3(-Main.screenPosition, 0f));
-			var view = Main.GameViewMatrix.TransformationMatrix;
-			var projection = Matrix.CreateOrthographicOffCenter(0, Main.graphics.GraphicsDevice.Viewport.Width,
-				Main.graphics.GraphicsDevice.Viewport.Height, 0, -1f, 1f);
-
-			var transformation = world * view * projection;
-
-			//effect.Parameters["WorldMatrix"].SetValue(Matrix.CreateTranslation(new Vector3(-Main.screenPosition, 0f)));
-			//effect.Parameters["ViewMatrix"].SetValue(Main.GameViewMatrix.TransformationMatrix);
-			//effect.Parameters["ProjectionMatrix"].SetValue(Matrix.CreateOrthographicOffCenter(0, Main.graphics.GraphicsDevice.Viewport.Width, Main.graphics.GraphicsDevice.Viewport.Height, 0, -1f, 1f));
-			//effect.Parameters["transformationMatrix"].SetValue(transformation);
-
-			// effect.View = Matrix.CreateLookAt(new Vector3(0, 0, 10), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
-			effect.View = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(180), 0, 0) * Matrix.CreateTranslation(new Vector3(1, 0, -5));
-			effect.World = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(angle), 0, 0);
-			effect.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, device.Viewport.AspectRatio, 1.0f, 200.0f);
-
-			effect.VertexColorEnabled = true;
-			effect.TextureEnabled = true;
-			effect.LightingEnabled = false;
-			effect.Alpha = 1;
-
-
-
-			device.SetRenderTarget(renderTarget);
-
-
-			var depth = new DepthStencilState()
-			{
-				DepthBufferEnable = true,
-				DepthBufferFunction = CompareFunction.LessEqual
-			};
-
-
-			Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.PointClamp, depth, RasterizerState.CullNone);
-
-			device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Transparent, 1.0f, 0);
-			for (int i = 0; i < vertexBuffers.Count; i++)
-			{
-
-
-
-				device.RasterizerState = RasterizerState.CullNone;
-				effect.Texture = materialList[i];
-
-				foreach (var currentTechniquePass in effect.CurrentTechnique.Passes)
-				{
-					currentTechniquePass.Apply();
-					// device.Indices = null;
-					device.SetVertexBuffer(vertexBuffers[i]);
-
-					// device.DrawIndexedPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.TriangleList, 0, 0, vertexCount[i], 0, faceCount[i]);
-					device.DrawPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.TriangleList, 0, vertexBuffers[i].VertexCount / 3);
-				}
-			}
-			Main.spriteBatch.End();
-			saveTimer--;
-
-			if (saveTimer == 0)
-			{
-				renderTarget.SaveAsPng(File.OpenWrite(Path.Combine(ModLoader.ModPath, "Tiles3D", "Model", "antiGravity.png")), Main.graphics.GraphicsDevice.Viewport.Width, Main.graphics.GraphicsDevice.Viewport.Height);
-				saveTimer = 300;
-			}
-
-			device.Indices = oldBuffer;
-			device.SetRenderTargets(oldGraphicsBinding);
-			device.SetVertexBuffers(oldVertexBinding);
-
-			Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.DepthRead, RasterizerState.CullNone);
-			Main.spriteBatch.Draw(renderTarget, Vector2.Zero, Color.White);
-			Main.spriteBatch.End();
-		}
-
-		public void SetProperty<T>(object source, string propertyName, object value)
-		{
-			PropertyInfo propertyInfo = typeof(T).GetProperty(propertyName, BindingFlags.Public);
-			propertyInfo.SetMethod.Invoke(source, new[] { value });
 		}
 	}
 }

@@ -14,14 +14,12 @@ using Assimp;
 namespace Tiles3D.AssimpLib
 {
 	// Credits to Dradonhunter for this skeleton
-	public class LoadModel : ModSystem
+	public class LoadModel
 	{
 		private AssimpModel model;
 
-		public override void Load()
+		public void Load()
 		{
-			Terraria.On_Main.DrawBG += delegate (On_Main.orig_DrawBG orig, Main self) { };
-			Terraria.On_Main.DrawBackgroundBlackFill += delegate (On_Main.orig_DrawBackgroundBlackFill orig, Main self) { };
 			model = new AssimpModel(Path.Combine(ModLoader.ModPath, "Tiles3D", "Model", "eoc.fbx"),
 				PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs);
 			/*
@@ -95,33 +93,6 @@ namespace Tiles3D.AssimpLib
                 texture2D.SetData(textureColor);
                 textureList.Add(texture2D);
             }*/
-		}
-
-		public override void UpdateUI(GameTime gameTime)
-		{
-			model.Update(gameTime);
-		}
-
-		public override void PostDrawTiles()
-		{
-			model.Draw();
-		}
-
-		public T CallConstructorObject<T>()
-		{
-			return (T)Activator.CreateInstance(typeof(T), BindingFlags.NonPublic | BindingFlags.Instance);
-		}
-
-		public void SetProperty<T>(object source, string propertyName, object value)
-		{
-			PropertyInfo propertyInfo = typeof(T).GetProperty(propertyName, BindingFlags.Public);
-			propertyInfo.SetMethod.Invoke(source, new[] { value });
-		}
-
-		public Matrix ConvertAssimpMatrix(Assimp.Matrix4x4 matrix)
-		{
-			return new(matrix.A1, matrix.A2, matrix.A3, matrix.A4, matrix.B1, matrix.B2, matrix.B3, matrix.B4,
-				matrix.C1, matrix.C2, matrix.C3, matrix.C4, matrix.D1, matrix.D2, matrix.D3, matrix.D4);
 		}
 	}
 }

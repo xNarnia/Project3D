@@ -1,1 +1,6 @@
-
+Items: {
+	CthuluItem3D: {
+		DisplayName: Cthulu Item3 D
+		Tooltip: ""
+	}
+}
