@@ -77,9 +77,6 @@ namespace Terraria3DKit.Shapes
 
 		// Assimp Model Variables
 		private AssimpModel model { get; set; }
-		private IndexBuffer oldBuffer { get; set; }
-		private RenderTargetBinding[] oldGraphicsBinding { get; set; }
-		private VertexBufferBinding[] oldVertexBinding { get; set; }
 		private GraphicsDevice device { get; set; }
 
 		public RenderTarget2D renderTarget { get; set; }
@@ -109,26 +106,6 @@ namespace Terraria3DKit.Shapes
 				PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs);
 
 			device = Main.instance.GraphicsDevice;
-
-			oldBuffer = device.Indices;
-			oldGraphicsBinding = device.GetRenderTargets();
-			oldVertexBinding = device.GetVertexBuffers();
-
-
-			Main.QueueMainThreadAction(() =>
-			{
-				renderTarget = new RenderTarget2D(Main.instance.GraphicsDevice, Main.graphics.GraphicsDevice.Viewport.Width, Main.graphics.GraphicsDevice.Viewport.Height, true, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
-
-				//effect = shadetest3d.Instance.Assets.Request<Effect>("Assets/3DModel4", AssetRequestMode.ImmediateLoad).Value;
-
-
-
-
-				//effect.Parameters["WorldMatrix"].SetValue(Main.GameViewMatrix.TransformationMatrix); 
-				//effect.Parameters["ViewMatrix"].SetValue(viewMatrix);
-				//effect.Parameters["ProjectionMatrix"].SetValue(projectionMatrix);
-
-			});
 
 			Main.NewText("Loaded Cthulu");
 
@@ -231,7 +208,7 @@ namespace Terraria3DKit.Shapes
 						(float)RotationY.ToRadians(),
 						(float)RotationZ.ToRadians());
 
-			//if (ModifyInterfaceLayerFix)
+			//if (ModifyInterfaceLayerFix) // Worry about this later for 3D Items
 			if (false)
 			{
 				// Handles Game Zoom set by the Zoom slider
@@ -246,9 +223,11 @@ namespace Terraria3DKit.Shapes
 
 			// This is not respecting coordinates when put in Tile Draw
 			// When this is ran through ModifyLayerInterface, it works appropriately
-			// I have no clue what is going on. This is a major impedement.
+			// I have no clue what is going on
 			if (false)
 			{
+				//_effect.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, device.Viewport.AspectRatio, 1.0f, 200.0f);
+
 				float aspectRatio =
 					Main.graphics.GraphicsDevice.Viewport.Width / (float)Main.graphics.GraphicsDevice.Viewport.Height;
 				float fieldOfView = MathHelper.PiOver4;
@@ -341,8 +320,8 @@ namespace Terraria3DKit.Shapes
 					var y = (int)(pos.Y) / 16;
 					Vector3 color = Lighting.GetColor(x, y).ToVector3();
 
-					//_effect.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, device.Viewport.AspectRatio, 1.0f, 200.0f);
-
+					// The order you assign values to your _effect is very important.
+					// Assigning anything too early could lead to potential failures!
 					_effect.DirectionalLight0.DiffuseColor = color;
 					_effect.DirectionalLight1.DiffuseColor = color;
 					_effect.DirectionalLight2.DiffuseColor = color;
